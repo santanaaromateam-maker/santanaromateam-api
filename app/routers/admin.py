@@ -8,7 +8,8 @@ from app.cloudinary_service import upload_image
 from app.config import settings
 from app.database import services_collection
 from app.deps import get_current_admin
-from app.schemas import ServiceAdmin, ServiceCreate, ServiceUpdate, UploadResponse
+from app.schemas import GalleryItem, ServiceAdmin, ServiceFormInput, ServiceFormUpdate, UploadResponse
+from app.service_fields import expand_service_fields
 from app.services_mapper import service_to_admin
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -21,27 +22,23 @@ def _parse_id(service_id: str) -> ObjectId:
         raise HTTPException(status_code=404, detail="Service not found") from exc
 
 
-def _service_from_create(body: ServiceCreate) -> dict:
+def _next_order() -> int:
+    last = services_collection().find_one(sort=[("order", -1)])
+    return (last.get("order", -1) + 1) if last else 0
+
+
+def _service_from_create(body: ServiceFormInput) -> dict:
     now = datetime.now(timezone.utc)
-    return {
-        "slug": body.slug,
-        "title": body.title,
-        "short_description": body.short_description,
-        "chip_label": body.chip_label,
-        "order": body.order,
-        "active": body.active,
-        "image": body.image,
-        "image_alt": body.image_alt,
-        "hero_title": body.hero_title,
-        "hero_subtitle": body.hero_subtitle,
-        "meta_description": body.meta_description,
-        "intro": body.intro,
-        "gallery": [g.model_dump() for g in body.gallery],
-        "service_areas": body.service_areas,
-        "whatsapp_text": body.whatsapp_text,
-        "created_at": now,
-        "updated_at": now,
-    }
+    fields = expand_service_fields(
+        title=body.title,
+        description=body.description,
+        image=body.image,
+        image_alt=body.image_alt,
+        gallery=body.gallery,
+        order=_next_order(),
+        active=True,
+    )
+    return {**fields, "created_at": now, "updated_at": now}
 
 
 @router.get("/services", response_model=list[ServiceAdmin])
@@ -51,35 +48,56 @@ def list_services(_: dict = Depends(get_current_admin)):
 
 
 @router.post("/services", response_model=ServiceAdmin, status_code=status.HTTP_201_CREATED)
-def create_service(body: ServiceCreate, _: dict = Depends(get_current_admin)):
-    if services_collection().find_one({"slug": body.slug}):
-        raise HTTPException(status_code=400, detail="Slug already exists")
+def create_service(body: ServiceFormInput, _: dict = Depends(get_current_admin)):
+    doc = _service_from_create(body)
+    if services_collection().find_one({"slug": doc["slug"]}):
+        raise HTTPException(status_code=400, detail="A service with this title already exists")
 
-    result = services_collection().insert_one(_service_from_create(body))
-    doc = services_collection().find_one({"_id": result.inserted_id})
-    return service_to_admin(doc)
+    result = services_collection().insert_one(doc)
+    saved = services_collection().find_one({"_id": result.inserted_id})
+    return service_to_admin(saved)
 
 
 @router.put("/services/{service_id}", response_model=ServiceAdmin)
-def update_service(service_id: str, body: ServiceUpdate, _: dict = Depends(get_current_admin)):
+def update_service(service_id: str, body: ServiceFormUpdate, _: dict = Depends(get_current_admin)):
     oid = _parse_id(service_id)
     existing = services_collection().find_one({"_id": oid})
     if not existing:
         raise HTTPException(status_code=404, detail="Service not found")
 
-    data = body.model_dump(exclude_unset=True)
-    if "slug" in data and data["slug"] != existing["slug"]:
-        if services_collection().find_one({"slug": data["slug"]}):
-            raise HTTPException(status_code=400, detail="Slug already exists")
-
-    if "gallery" in data and data["gallery"] is not None:
-        data["gallery"] = [g.model_dump() if hasattr(g, "model_dump") else g for g in data["gallery"]]
-
-    if not data:
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
         return service_to_admin(existing)
 
-    data["updated_at"] = datetime.now(timezone.utc)
-    services_collection().update_one({"_id": oid}, {"$set": data})
+    title = updates.get("title", existing["title"])
+    intro = existing.get("intro") or []
+    description = updates.get(
+        "description",
+        "\n\n".join(intro) if intro else existing.get("short_description", ""),
+    )
+    image = updates.get("image", existing.get("image", ""))
+    image_alt = updates.get("image_alt", existing.get("image_alt", ""))
+    gallery_raw = updates.get("gallery", existing.get("gallery") or [])
+    gallery = [
+        GalleryItem(**item) if isinstance(item, dict) else item for item in gallery_raw
+    ]
+
+    fields = expand_service_fields(
+        title=title,
+        description=description,
+        image=image,
+        image_alt=image_alt,
+        gallery=gallery,
+        order=existing.get("order", 0),
+        active=updates.get("active", existing.get("active", True)),
+    )
+
+    if fields["slug"] != existing["slug"]:
+        if services_collection().find_one({"slug": fields["slug"], "_id": {"$ne": oid}}):
+            raise HTTPException(status_code=400, detail="A service with this title already exists")
+
+    fields["updated_at"] = datetime.now(timezone.utc)
+    services_collection().update_one({"_id": oid}, {"$set": fields})
     doc = services_collection().find_one({"_id": oid})
     return service_to_admin(doc)
 

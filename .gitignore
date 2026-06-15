@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+render.env
 
 # ── Python virtual environments ──
 .venv/
