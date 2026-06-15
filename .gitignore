@@ -1,0 +1,56 @@
+# ── Secrets & local config ──
+.env
+.env.*
+!.env.example
+
+# ── Python virtual environments ──
+.venv/
+venv/
+env/
+ENV/
+
+# ── Bytecode & caches ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ── Testing & coverage ──
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ── Type checkers & linters ──
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# ── Build / packaging ──
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# ── Databases (legacy SQLite; prod uses MongoDB) ──
+*.db
+*.sqlite3
+santana.db
+
+# ── Logs ──
+*.log
+logs/
+
+# ── OS & editors ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
