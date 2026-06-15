@@ -45,6 +45,7 @@ def health():
         "database": "mongodb",
         "mongodb_db": settings.mongodb_db_name,
         "cloudinary": settings.cloudinary_configured,
+        "cors_origins": settings.cors_origin_list,
     }
 
 

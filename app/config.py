@@ -20,13 +20,19 @@ class Settings(BaseSettings):
 
     admin_origin: str = "http://localhost:5173"
     web_origin: str = "http://localhost:5500,https://santanaaromateam.com"
+    # Optional extra origins (comma-separated), e.g. alternate admin URLs on Render
+    cors_origins: str = ""
+
+    @staticmethod
+    def _normalize_origin(value: str) -> str:
+        return value.strip().strip('"').strip("'").rstrip("/")
 
     @property
     def cors_origin_list(self) -> list[str]:
         origins: set[str] = set()
-        for raw in (self.admin_origin, self.web_origin):
+        for raw in (self.admin_origin, self.web_origin, self.cors_origins):
             for origin in raw.split(","):
-                origin = origin.strip().rstrip("/")
+                origin = self._normalize_origin(origin)
                 if origin:
                     origins.add(origin)
         return sorted(origins)
