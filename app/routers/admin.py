@@ -133,4 +133,7 @@ async def upload_service_image(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Cloudinary upload failed: {exc}") from exc
 
-    return UploadResponse(url=result["secure_url"], public_id=result["public_id"])
+    return UploadResponse(
+        url=result["secure_url"],
+        public_id=result["public_id"],
+    )

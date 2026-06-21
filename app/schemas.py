@@ -45,6 +45,7 @@ class ServicePublic(BaseModel):
     order: int
     active: bool
     image: str
+    imageHero: str = ""
     imageAlt: str
     heroTitle: str
     heroSubtitle: str
