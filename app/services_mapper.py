@@ -37,6 +37,7 @@ def service_to_public(doc: dict) -> ServicePublic:
         gallery=_gallery_for_public(doc),
         serviceAreas=doc.get("service_areas") or [],
         whatsappText=doc.get("whatsapp_text", ""),
+        isCommercial=doc.get("is_commercial", True),
     )
 
 
@@ -65,4 +66,5 @@ def service_to_admin(doc: dict) -> ServiceAdmin:
         gallery=_gallery_raw(doc),
         serviceAreas=doc.get("service_areas") or [],
         whatsappText=doc.get("whatsapp_text", ""),
+        isCommercial=doc.get("is_commercial", True),
     )

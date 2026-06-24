@@ -37,6 +37,7 @@ def _service_from_create(body: ServiceFormInput) -> dict:
         gallery=body.gallery,
         order=_next_order(),
         active=True,
+        is_commercial=body.is_commercial,
     )
     return {**fields, "created_at": now, "updated_at": now}
 
@@ -90,6 +91,7 @@ def update_service(service_id: str, body: ServiceFormUpdate, _: dict = Depends(g
         gallery=gallery,
         order=existing.get("order", 0),
         active=updates.get("active", existing.get("active", True)),
+        is_commercial=updates.get("is_commercial", existing.get("is_commercial", True)),
     )
 
     if fields["slug"] != existing["slug"]:

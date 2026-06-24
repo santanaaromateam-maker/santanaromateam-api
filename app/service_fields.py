@@ -66,6 +66,7 @@ def expand_service_fields(
     gallery: list[GalleryItem] | None = None,
     order: int = 0,
     active: bool = True,
+    is_commercial: bool = True,
 ) -> dict:
     title = title.strip()
     description = description.strip()
@@ -87,4 +88,5 @@ def expand_service_fields(
         "gallery": _gallery_with_alt(gallery or [], title, image_alt),
         "service_areas": DEFAULT_SERVICE_AREAS.copy(),
         "whatsapp_text": f"Hi, I need {title}.",
+        "is_commercial": is_commercial,
     }

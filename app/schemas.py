@@ -26,6 +26,7 @@ class ServiceFormInput(BaseModel):
     image: str = ""
     image_alt: str = ""
     gallery: list[GalleryItem] = []
+    is_commercial: bool = True
 
 
 class ServiceFormUpdate(BaseModel):
@@ -35,6 +36,7 @@ class ServiceFormUpdate(BaseModel):
     image_alt: str | None = None
     gallery: list[GalleryItem] | None = None
     active: bool | None = None
+    is_commercial: bool | None = None
 
 
 class ServicePublic(BaseModel):
@@ -54,6 +56,7 @@ class ServicePublic(BaseModel):
     gallery: list[GalleryItem]
     serviceAreas: list[str]
     whatsappText: str
+    isCommercial: bool = True
 
     model_config = {"from_attributes": True}
 
