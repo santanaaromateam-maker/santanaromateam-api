@@ -8,9 +8,10 @@ from app.cloudinary_service import upload_image
 from app.config import settings
 from app.database import services_collection
 from app.deps import get_current_admin
-from app.schemas import GalleryItem, ServiceAdmin, ServiceFormInput, ServiceFormUpdate, UploadResponse
+from app.schemas import GalleryItem, ServiceAdmin, ServiceFormInput, ServiceFormUpdate, SiteSettingsAdmin, SiteSettingsUpdate, UploadResponse
 from app.service_fields import expand_service_fields
 from app.services_mapper import service_to_admin
+from app.site_settings import site_settings_to_admin, update_site_settings
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -139,3 +140,18 @@ async def upload_service_image(
         url=result["secure_url"],
         public_id=result["public_id"],
     )
+
+
+@router.get("/site-settings", response_model=SiteSettingsAdmin)
+def get_site_settings(_: dict = Depends(get_current_admin)):
+    return site_settings_to_admin()
+
+
+@router.put("/site-settings", response_model=SiteSettingsAdmin)
+def save_site_settings(body: SiteSettingsUpdate, _: dict = Depends(get_current_admin)):
+    doc = update_site_settings(
+        team_photo_url=body.team_photo_url,
+        team_photo_alt=body.team_photo_alt,
+        team_photo_public_id=body.team_photo_public_id,
+    )
+    return site_settings_to_admin(doc)

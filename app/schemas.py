@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -67,6 +69,22 @@ class ServiceAdmin(ServicePublic):
 
 class ServicesPublicResponse(BaseModel):
     services: list[ServicePublic]
+
+
+class SiteSettingsPublic(BaseModel):
+    teamPhotoUrl: str = ""
+    teamPhotoAlt: str = "Santana Aroma Cleaning team"
+
+
+class SiteSettingsAdmin(SiteSettingsPublic):
+    teamPhotoPublicId: str = ""
+    updatedAt: datetime | None = None
+
+
+class SiteSettingsUpdate(BaseModel):
+    team_photo_url: str = ""
+    team_photo_alt: str = Field(default="", max_length=300)
+    team_photo_public_id: str = ""
 
 
 class UploadResponse(BaseModel):

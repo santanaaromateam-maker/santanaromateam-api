@@ -40,6 +40,10 @@ def services_collection() -> Collection:
     return get_db()["services"]
 
 
+def site_settings_collection() -> Collection:
+    return get_db()["site_settings"]
+
+
 def _ensure_indexes(db: Database) -> None:
     db["admins"].create_index("email", unique=True)
     db["services"].create_index("slug", unique=True)
